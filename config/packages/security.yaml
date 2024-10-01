@@ -9,13 +9,27 @@ security:
             entity:
                 class: App\Entity\Users
                 property: email
+        # used to reload user from session & other features (e.g. switch_user)
+        # used to reload user from session & other features (e.g. switch_user)
+       
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+            
         main:
-            lazy: true
-            provider: app_user_provider
+               lazy: true
+               provider: app_user_provider
+               json_login: 
+                     check_path: api_login
+               logout:
+                     path: api_logout 
+            
+       
+             #     where to redirect after logout
+                   #target: app_any_route
+            
+              
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -26,8 +40,16 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        
+        #- { path: '/api/login',roles: IS_AUTHENTICATED_ANONYMOUSLY}
+        #- { path: '/api',roles: IS_AUTHENTICATED_FULLY }
+       
         # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        #- { path: ^/api/sendmessage, roles: IS_AUTHENTICATED_FULLY }
+        #- { path: ^/api/userme, roles: ROLE_USER }
+         # - { path: ^/api, roles: IS_AUTHENTICATED_FULLY  }
+         # - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+           
 
 when@test:
     security:
@@ -41,3 +63,20 @@ when@test:
                 cost: 4 # Lowest possible value for bcrypt
                 time_cost: 3 # Lowest possible value for argon
                 memory_cost: 10 # Lowest possible value for argon
+
+
+ #login:
+        #     pattern: ^/api/login
+         #    stateless: true
+             #provider: app_user_provider
+          #   json_login:
+           #     check_path: /api/login
+            
+
+      #  api:
+       #     pattern:   ^/api
+        #  
+         
+            
+         #   jwt: ~
+          #  provider: jwt

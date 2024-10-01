@@ -17,15 +17,24 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use App\Controller\UserInfoController;
 
 #[ApiResource(
+   
     operations:[
-        new Get( normalizationContext: ['groups' => ['User:item:read']] ),
+        new Get( normalizationContext: ['groups' => ['User:item:read']]),
+        new GetCollection(
+            name: 'UserMe',
+            uriTemplate: '/userme', 
+            controller: UserInfoController::class,
+            stateless:true ),
         new GetCollection( normalizationContext: ['groups' => ['User:collection:read']] ),
         new Post( denormalizationContext: ['groups' => ['User:item:write']]),
         new Delete(),
-        new Patch()
+        new Patch(),
+       
     ]
+    
 )]
 #[ORM\Entity(repositoryClass: UsersRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -37,25 +46,24 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['User:collection:read', 'User:item:read'])]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
     private ?string $email = null;
 
     /**
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    #[Groups(['User:collection:read', 'User:item:read'])]
+    #[Groups(['User:collection:read', 'User:item:read' , 'User:item:write' ,'Message:collection:get'])]
     private array $roles = [];
 
     /**
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Groups(['User:item:write'])]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['Message:collection:get'] ,['User:collection:read'], ['User:item:write'])]
-    private ?string $name = null;
+
 
     /**
      * @var Collection<int, Messages>
@@ -71,6 +79,11 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['User:collection:read', 'User:item:read'])]
     private Collection $received;
 
+    #[ORM\Column(length: 255)]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get'])]
+    private ?string $name = null;
+
+  
     public function __construct()
     {
         $this->sent = new ArrayCollection();
@@ -152,17 +165,7 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
-    }
+    
 
     /**
      * @return Collection<int, Messages>
@@ -223,4 +226,18 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+   
 }

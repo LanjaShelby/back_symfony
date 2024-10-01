@@ -9,6 +9,8 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use App\Controller\GetMessageController;
+use App\Controller\SendMessageController;
 use App\Repository\MessagesRepository;
 use DateTime;
 use DateTimeImmutable;
@@ -17,16 +19,31 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use PhpParser\Node\Expr\New_;
+use Symfony\Component\Config\Builder\Method;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\Date;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: MessagesRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ApiResource(
+   
     operations:  [
         new Get(   normalizationContext: ['groups' => ['Message:item:get']] ),
         new GetCollection(   normalizationContext: ['groups' => ['Message:collection:get']] ),
-        new Post( denormalizationContext:['groups' => ['Message:item:post']] ),
+        new Post( 
+            uriTemplate: '/sendmessage', 
+            controller: SendMessageController::class,
+            deserialize: false,
+            stateless: true
+         ),
+         new Post(
+            name:'ItemGetMessage',
+            uriTemplate: '/itemgetmessage', 
+            controller: GetMessageController::class,
+            deserialize: false,
+            stateless: true
+         ),
         new delete()
     ]
 
@@ -70,7 +87,7 @@ class Messages
     /**
      * @var Collection<int, File>
      */
-    #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'message', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'message' , orphanRemoval: true)]
     #[Groups(['Message:collection:get'] ,['Message:item:get'])]
     private Collection $files;
 
@@ -186,5 +203,9 @@ class Messages
         }
 
         return $this;
+    }
+    public function __construct()
+    {
+        $this->files = new ArrayCollection();
     }
 }
