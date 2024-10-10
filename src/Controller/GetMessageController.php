@@ -30,13 +30,14 @@ class GetMessageController extends AbstractController
         $repository = $entityManager->getRepository(Messages::class);
         $messages = $repository->findBy(
             ['recipient' => $recipient],
-            ['created_at' => 'ASC']
+            ['created_at' => 'DESC']
         );
         
       
         $data = [];
         foreach ($messages as $message) {
             $data[] = [
+                //'id' => $message->getId(),
                 'title' => $message->getTitle(),
                 'message' => $message->getMessage(),
                 'created_at' => $message->getCreatedAt()->format('Y-m-d H:i:s'),

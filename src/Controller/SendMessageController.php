@@ -64,6 +64,7 @@ $Message->setTitle($MessagePost['title']);
 $Message->setSender($sender);
 $Message->setRecipient($recipient);
 
+
 if(!empty($FilesPost)){
     foreach($FilesPost as $file){
        if($file instanceof UploadedFile){
