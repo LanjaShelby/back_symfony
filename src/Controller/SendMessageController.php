@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\File;
 use App\Entity\Messages;
 use App\Entity\Users;
+use App\Repository\ServicesRepository;
 use App\Repository\UsersRepository;
+use Doctrine\Migrations\Tools\Console\ConsoleLogger;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,11 +19,46 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
-class SendMessageController  extends AbstractController
-{
+
    
-   
-   /*  public function __construct(private $userSender)
+   /*
+       #[ORM\ManyToOne(inversedBy: 'received')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['Message:collection:get','Message:item:get'])]
+    private ?Services $recipient = null;
+      public function addReceived(Messages $received): static
+    {
+        if (!$this->received->contains($received)) {
+            $this->received->add($received);
+            $received->setRecipient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReceived(Messages $received): static
+    {
+        if ($this->received->removeElement($received)) {
+            // set the owning side to null (unless already changed)
+            if ($received->getRecipient() === $this) {
+                $received->setRecipient(null);
+            }
+        }
+
+        return $this;
+    }
+     public function getRecipient(): ?Users
+    {
+        return $this->recipient;
+    }
+
+    public function setRecipient(?Users $recipient): static
+    {
+        $this->recipient = $recipient;
+
+        return $this;
+    }
+     public function __construct(private $userSender)
     {
        $user = $this->getUser();
        $this->userSender = $user->getUserIdentifier();
@@ -39,39 +76,149 @@ $data = base64_decode($file);
  $userSender = $this->security->getUser();
 }
 */
+class SendMessageController  extends AbstractController
+{
+   
 
-    public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user)
+    public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user , ServicesRepository $service)
     {
 $MessagePost = $request->request->all();
-
 /**@var  UploadedFile $file */
 $FilesPost = $request->files->get('files');
 
 if(!$MessagePost){
     return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
 }
-if(!$FilesPost){
-    return new JsonResponse(['error' => 'Aucun fichier reçu'], 400);
-}
 
 $sender = $user->find($MessagePost['sender']);
-$recipient = $user->find($MessagePost['recipient']);
+$senderName = $sender->getName();
+
+$service_recipient_name = $service->find($MessagePost['recipient']); 
+// the service recipient
+$serviceName = $service_recipient_name->getLibelleService();
 
 
 $Message = new Messages();
 $Message->setMessage($MessagePost['message']);
 $Message->setTitle($MessagePost['title']);
 $Message->setSender($sender);
-$Message->setRecipient($recipient);
-
-
+$Message->setRecipientService($service_recipient_name);
+$Message->setSenderName($senderName);
+$Message->setRecipientName($serviceName);
 if(!empty($FilesPost)){
     foreach($FilesPost as $file){
        if($file instanceof UploadedFile){
-        $fileImag= ["PNG","png","jpg","JPG","JPEG","jpeg"];
-        $filePDF = ["pdf","PDF"];
-        $fileDOC = ["docx","doc"];
-            if(in_array($file->guessExtension(),$fileImag,true)){
+             $fileName = $file->getClientOriginalName() . '-' . uniqid("", true) . '.' . $file->guessExtension();
+                $filePath = '';
+            if (in_array($file->guessExtension(), ["png", "jpg", "jpeg"], true)) {
+                $filePath = '/public/files/Images';
+                $typeFile = "Images";
+            } elseif (in_array($file->guessExtension(), ["pdf"], true)) {
+                $filePath = '/public/files/PDF';
+                $typeFile = "PDF";
+            } elseif (in_array($file->guessExtension(), ["doc", "docx"], true)) {
+                $filePath = '/public/files/Doc';
+                $typeFile = "Doc";
+            } else {
+                $filePath = '/public/files/Another';
+                $typeFile = "Another";
+            }
+
+            // Déplacement et création du fichier
+            $file->move($this->getParameter('kernel.project_dir') . $filePath, $fileName);
+            $Files = new File();
+            $Files->setPath($fileName);
+            $Files->setSize(2);  // Définir la taille réelle si nécessaire
+            $Files->setTypeFile($typeFile);
+           
+            $entityManager->persist($Files);
+
+            // Associer le fichier au message
+            $Message->addFile($Files); 
+       }else{
+        return $this->json([
+            'error' => 'Fichier non valide ou introuvable.'
+        ], 400);
+       }
+       
+    }
+
+
+}else{
+    return $this->json([
+        'error' => 'Probleme parcours des fichiers'
+    ], 400);
+}
+
+    $entityManager->persist($Message);  
+    $entityManager->flush();    
+ 
+   
+    return $this->json([
+        'message' => 'Message envoyer avec succès',
+    ]);
+
+    }
+
+}
+    
+    /*private $entityManager;
+      #[Route(path: '/api/publish', name: 'publish')]
+  public function publish(HubInterface $hub): Response
+  {
+    try {
+      $update = new Update(
+        'https://example.com/books/1',
+        json_encode(['status' => 'message recu'])
+    );
+
+    $hub->publish($update);
+
+    return new Response('published!');
+    } catch (\Throwable $th) {
+        throw $th;
+    }
+      
+  } $update = new Update(
+        "'https://example.com/books/1' ",  // Topic spécifique à l'utilisateur
+        json_encode([
+            'id' => $Message->getId(),
+            'title' => $Message->getTitle(),
+            'message' => $Message->getMessage(),
+            'created_at' => $Message->getCreatedAt()->format('Y-m-d H:i:s'),
+            'sender' => $Message->getSenderName(),
+            'recipient' => $Message->getRecipientName(),
+        ])
+    );
+    $hub->publish($update); 
+   
+    public function __construct( EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+    public function __invoke(Request $request): Response
+    {
+        $uploadedfile = $request->file->get('file');
+        if (!$uploadedfile) {
+            throw new BadRequestHttpException('File is required');
+        }
+
+        $piece = new File();
+        $piece->setPath($uploadedfile);
+
+         'data' => [
+        'message_text' => $MessagePost['message'],
+       
+        'sender' => $MessagePost['sender'],
+        'recipient' => $MessagePost['recipient'],
+        'title' => $MessagePost['title']
+        
+    ]
+        */
+
+
+ 
+        /*if(in_array($file->guessExtension(),$fileImag,true)){
                     $fileName =  $file->getClientOriginalName(). '-' .uniqid("",true). '.'. $file->guessExtension() ;
                     $file->move($this->getParameter('kernel.project_dir') .'/public/files/Images' , $fileName);
                     $Files = new File();
@@ -109,41 +256,7 @@ if(!empty($FilesPost)){
                     $Files->setTypeFile("Another");
                     $entityManager->persist($Files);
                     $Message->addFile($Files);
-            }
-       }
-
-    }
-
-
-}else{
-    return $this->json([
-        'error' => 'Probleme parcours des fichiers'
-    ], 400);
-}
-
-
-$entityManager->persist($Message);
-$entityManager->flush();
-
-if (!$FilesPost || !$MessagePost) {
-    return $this->json([
-        'error' => 'Les fichiers ou le message sont manquants'
-    ], 400);
-}
-
-
-
-return $this->json([
-    'message' => 'Message reçu avec succès',
-    'data' => [
-        'message_text' => $MessagePost['message'],
-       
-        'sender' => $MessagePost['sender'],
-        'recipient' => $MessagePost['recipient'],
-        'title' => $MessagePost['title']
-        
-    ]
-]);
+                    
 //$content = $request->getContent();
 
  //$data = json_decode($content);
@@ -151,28 +264,4 @@ return $this->json([
   //      return $this->json([ 
     //    'message' => 'Message envoyé avec succès',
       //  'data' => $data ]);
-
-    }
-
-}
-    
-    /*private $entityManager;
-    
-    public function __construct( EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-    }
-    public function __invoke(Request $request): Response
-    {
-        $uploadedfile = $request->file->get('file');
-        if (!$uploadedfile) {
-            throw new BadRequestHttpException('File is required');
-        }
-
-        $piece = new File();
-        $piece->setPath($uploadedfile);
-        */
-
-
- 
-
+            }*/

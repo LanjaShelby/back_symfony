@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Controller;
+
+use App\Repository\UsersRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
+use App\Repository\ServicesRepository;
+use Symfony\Component\HttpFoundation\Request;
+
+
+class GetAllUserController extends AbstractController
+{
+    public function __invoke( Request $request , UsersRepository $user , ServicesRepository $service )
+    {
+        $Post = $request->request->all();
+        $find_service = $service->find($Post['service']);
+        $user_service = $user->findBy([
+            'service'=>$find_service
+            
+        ]);
+       
+        $data=[];
+        foreach ($user_service as $user_ser) {
+            $data[] =[
+                'id' => $user_ser->getId(),
+                'email' => $user_ser->getUserIdentifier(),
+                'roles' => $user_ser->getRoles(),
+                'name' => $user_ser->getName(),
+                'service' => $user_ser->getService(),
+                'fonction' => $user_ser->getFonction(),
+                'phone' => $user_ser->getPhone(),
+                'image' => $user_ser->getImage()
+            ];
+
+        }
+        return new JsonResponse($data);
+    }
+}
+

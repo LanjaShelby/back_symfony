@@ -22,12 +22,13 @@ use PhpParser\Node\Expr\New_;
 use Symfony\Component\Config\Builder\Method;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\Date;
+use Symfony\Config\ApiPlatform\MercureConfig;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: MessagesRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ApiResource(
-   
+    
     operations:  [
         new Get(   normalizationContext: ['groups' => ['Message:item:get']] ),
         new GetCollection(   normalizationContext: ['groups' => ['Message:collection:get']] ),
@@ -79,17 +80,26 @@ class Messages
     #[Groups(['Message:collection:get' , 'Message:item:get'])]
     private ?Users $sender = null;
 
-    #[ORM\ManyToOne(inversedBy: 'received')]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['Message:collection:get','Message:item:get'])]
-    private ?Users $recipient = null;
+
 
     /**
      * @var Collection<int, File>
      */
-    #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'message' , orphanRemoval: true)]
-    #[Groups(['Message:collection:get'] ,['Message:item:get'])]
+    #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'message' , orphanRemoval: false )]
+    #[Groups(['Message:collection:get' ,'Message:item:get'])]
     private Collection $files;
+
+    #[ORM\Column(length: 150)]
+    #[Groups(['Message:collection:get' ,'Message:item:get'])]
+    private ?string $senderName = null;
+
+    #[ORM\Column(length: 150)]
+    #[Groups(['Message:collection:get' ,'Message:item:get'])]
+    private ?string $recipientName = null;
+
+    #[ORM\ManyToOne(inversedBy: 'messages')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Services $recipient_service = null;
 
     #[ORM\PrePersist]
    public function setCreatedAtValue(): void{
@@ -163,17 +173,7 @@ class Messages
         return $this;
     }
 
-    public function getRecipient(): ?Users
-    {
-        return $this->recipient;
-    }
-
-    public function setRecipient(?Users $recipient): static
-    {
-        $this->recipient = $recipient;
-
-        return $this;
-    }
+   
 
     /**
      * @return Collection<int, File>
@@ -207,5 +207,41 @@ class Messages
     public function __construct()
     {
         $this->files = new ArrayCollection();
+    }
+
+    public function getSenderName(): ?string
+    {
+        return $this->senderName;
+    }
+
+    public function setSenderName(string $senderName): static
+    {
+        $this->senderName = $senderName;
+
+        return $this;
+    }
+
+    public function getRecipientName(): ?string
+    {
+        return $this->recipientName;
+    }
+
+    public function setRecipientName(string $recipientName): static
+    {
+        $this->recipientName = $recipientName;
+
+        return $this;
+    }
+
+    public function getRecipientService(): ?Services
+    {
+        return $this->recipient_service;
+    }
+
+    public function setRecipientService(?Services $recipient_service): static
+    {
+        $this->recipient_service = $recipient_service;
+
+        return $this;
     }
 }

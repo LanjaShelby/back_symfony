@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Messages;
+use App\Entity\Services;
+use App\Repository\ServicesRepository;
 use App\Repository\UsersRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,21 +17,27 @@ use Symfony\Component\Routing\Attribute\Route;
 class GetMessageController extends AbstractController
 {
 
-    public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user )
+    public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user , ServicesRepository $service )
     {
         $MessagePost = $request->request->all();
        
-        $userPost = $MessagePost['user'];
+        $servicePost = $MessagePost['service'];
+        //$userPost = $MessagePost['user'];
     
-        if(!$MessagePost || !$userPost){
+        if(!$MessagePost || !$servicePost){
             return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
         }
-        $recipient = $user->findOneBy(['name' =>$userPost]);
-      
-        
+
+        //if(!$MessagePost || !$userPost){
+          //  return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
+       // }
+       // $recipient = $user->findOneBy(['name' =>$userPost]);
+        $recipientService = $service->find($servicePost);
+
+       // dd($recipientService);
         $repository = $entityManager->getRepository(Messages::class);
         $messages = $repository->findBy(
-            ['recipient' => $recipient],
+            ['recipient_service' => $recipientService],
             ['created_at' => 'DESC']
         );
         
@@ -45,9 +53,11 @@ class GetMessageController extends AbstractController
                     'name' => $message->getSender()->getName(),
                     'roles' => $message->getSender()->getRoles(),
                 ],
-                'recipient' => [
-                    'name' => $message->getRecipient()->getName(),
-                    'roles' => $message->getRecipient()->getRoles(),
+                'senderName' => $message->getSenderName(),
+                'recipientName' => $message->getRecipientName(),
+                'recipient_service' => [
+                    'libelle_name' => $message->getRecipientService()->getLibelleService(),
+                    'secteur' => $message->getRecipientService()->getSecteur(),
                 ],
                 'files' => array_map(function ($file) {
                     return [

@@ -17,6 +17,12 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\Controller\GetAllUserController;
+use App\Controller\GetUserController;
+use App\Controller\PatchRoleUserController;
+use App\Controller\PatchUserController;
+use App\Controller\RegisterController;
 use App\Controller\UserInfoController;
 
 #[ApiResource(
@@ -28,10 +34,25 @@ use App\Controller\UserInfoController;
             uriTemplate: '/userme', 
             controller: UserInfoController::class,
             stateless:true ),
+        new GetCollection(
+                name: 'UserAll',
+                uriTemplate: '/userall', 
+                controller: GetUserController::class,
+                stateless:true ),
+       new Post(
+                    name: 'Userr',
+                    uriTemplate: '/userr', 
+                    controller: GetAllUserController::class,
+                    deserialize: false,
+                    stateless:true ),
         new GetCollection( normalizationContext: ['groups' => ['User:collection:read']] ),
-        new Post( denormalizationContext: ['groups' => ['User:item:write']]),
+        new Post(   
+        uriTemplate: '/register', 
+        controller: RegisterController::class,
+        deserialize: false,
+        stateless: false),
         new Delete(),
-        new Patch(),
+        new Patch()
        
     ]
     
@@ -73,22 +94,34 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['User:collection:read', 'User:item:read'])]
     private Collection $sent;
 
-    /**
-     * @var Collection<int, Messages>
-     */
-    #[ORM\OneToMany(targetEntity: Messages::class, mappedBy: 'recipient')]
-    #[Groups(['User:collection:read', 'User:item:read'])]
-    private Collection $received;
+  
 
     #[ORM\Column(length: 255)]
     #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get'])]
     private ?string $name = null;
 
+    #[ORM\ManyToOne(inversedBy: 'users')]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
+    private ?Services $service = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
+    private ?string $fonction = null;
+
+    #[ORM\Column(length: 255)]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
+    private ?string $phone = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
+    private ?string $image = null;
+
   
     public function __construct()
     {
         $this->sent = new ArrayCollection();
-        $this->received = new ArrayCollection();
+      
     }
 
     public function getId(): ?int
@@ -198,35 +231,8 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, Messages>
-     */
-    public function getReceived(): Collection
-    {
-        return $this->received;
-    }
-
-    public function addReceived(Messages $received): static
-    {
-        if (!$this->received->contains($received)) {
-            $this->received->add($received);
-            $received->setRecipient($this);
-        }
-
-        return $this;
-    }
-
-    public function removeReceived(Messages $received): static
-    {
-        if ($this->received->removeElement($received)) {
-            // set the owning side to null (unless already changed)
-            if ($received->getRecipient() === $this) {
-                $received->setRecipient(null);
-            }
-        }
-
-        return $this;
-    }
+  
+  
 
     public function getName(): ?string
     {
@@ -236,6 +242,54 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getService(): ?Services
+    {
+        return $this->service;
+    }
+
+    public function setService(?Services $service): static
+    {
+        $this->service = $service;
+
+        return $this;
+    }
+
+    public function getFonction(): ?string
+    {
+        return $this->fonction;
+    }
+
+    public function setFonction(?string $fonction): static
+    {
+        $this->fonction = $fonction;
+
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(string $phone): static
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
 
         return $this;
     }
