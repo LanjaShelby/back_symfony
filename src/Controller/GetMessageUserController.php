@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class GetMessageController extends AbstractController
+class GetMessageUserController extends AbstractController
 {
 
     public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user , ServicesRepository $service )
@@ -22,6 +22,7 @@ class GetMessageController extends AbstractController
         $MessagePost = $request->request->all();
        
         $servicePost = $MessagePost['service'];
+    
         //$userPost = $MessagePost['user'];
     
         if(!$MessagePost || !$servicePost){
@@ -37,8 +38,9 @@ class GetMessageController extends AbstractController
        // dd($recipientService);
         $repository = $entityManager->getRepository(Messages::class);
         $messages = $repository->findBy(
-            ['recipient_service' => $recipientService],
-            ['created_at' => 'DESC']
+            ['recipient_service' => $recipientService , 'is_delete' => false ],
+            ['created_at' => 'DESC'],
+           
         );
         
       
@@ -50,10 +52,8 @@ class GetMessageController extends AbstractController
                 'message' => $message->getMessage(),
                 'created_at' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
                 'sender' => [
-                    'id' => $message ->getSender()->getId(),
                     'name' => $message->getSender()->getName(),
                     'roles' => $message->getSender()->getRoles(),
-                    
                 ],
                 'senderName' => $message->getSenderName(),
                 'recipientName' => $message->getRecipientName(),
@@ -61,7 +61,6 @@ class GetMessageController extends AbstractController
                     'libelle_name' => $message->getRecipientService()->getLibelleService(),
                     'secteur' => $message->getRecipientService()->getSecteur(),
                 ],
-                'senderService' => $message->getSenderService(),
                 'is_read' => $message->isRead(),
                 'files' => array_map(function ($file) {
                     return [

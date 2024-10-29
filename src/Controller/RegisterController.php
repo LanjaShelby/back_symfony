@@ -22,7 +22,11 @@ class RegisterController extends AbstractController
         $user = new Users();
         
         $UserPost = $request->request->all();
-        
+
+        $ServicePost = $UserPost['service'];
+       
+        $new_service = $service->find($ServicePost);
+       
         $FilePost = $request->files->get('image');
 
         if(!$UserPost){
@@ -38,7 +42,7 @@ class RegisterController extends AbstractController
          $user->setFonction($UserPost['fonction']);
          $user->setRoles($UserPost['roles']);
          $user->setPhone($UserPost['phone']);
-         $user->setService(null);
+         $user->setService($new_service);
          //$user->setService($services);
         if(!empty( $FilePost)){
             if (in_array($FilePost->guessExtension(), ["png", "jpg", "jpeg"], true)) {

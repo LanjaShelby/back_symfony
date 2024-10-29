@@ -9,6 +9,8 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Patch;
+use App\Controller\GetMessageUserController;
 use App\Controller\GetMessageController;
 use App\Controller\SendMessageController;
 use App\Repository\MessagesRepository;
@@ -45,7 +47,16 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             deserialize: false,
             stateless: true
          ),
-        new delete()
+         new Post(
+            name:'UserGetMessage',
+            uriTemplate: '/usergetmessage', 
+            controller: GetMessageUserController::class,
+            deserialize: false,
+            stateless: true
+         ),
+        new delete(),
+        new Patch(),
+
     ]
 
 
@@ -72,8 +83,8 @@ class Messages
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column]
-    #[Groups(['Message:collection:get'] )]
-    private ?bool $is_read = true;
+    #[Groups(['Message:collection:get' , 'Message:item:get'] )]
+    private ?bool $is_read = false;
 
     #[ORM\ManyToOne(inversedBy: 'sent')]
     #[ORM\JoinColumn(nullable: false)]
@@ -100,6 +111,20 @@ class Messages
     #[ORM\ManyToOne(inversedBy: 'messages')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Services $recipient_service = null;
+
+    #[ORM\Column]
+    #[Groups(['Message:collection:get' ,'Message:item:get'])]
+    private ?bool $is_delete = false;
+
+    #[ORM\Column(length: 100)]
+     #[Groups(['Message:collection:get' ,'Message:item:get'])]
+    private ?string $SenderService = null;
+
+    /**
+     * @var Collection<int, Reply>
+     */
+    #[ORM\OneToMany(targetEntity: Reply::class, mappedBy: 'message')]
+    private Collection $replymessage;
 
     #[ORM\PrePersist]
    public function setCreatedAtValue(): void{
@@ -207,6 +232,7 @@ class Messages
     public function __construct()
     {
         $this->files = new ArrayCollection();
+        $this->replymessage = new ArrayCollection();
     }
 
     public function getSenderName(): ?string
@@ -241,6 +267,60 @@ class Messages
     public function setRecipientService(?Services $recipient_service): static
     {
         $this->recipient_service = $recipient_service;
+
+        return $this;
+    }
+
+    public function isDelete(): ?bool
+    {
+        return $this->is_delete;
+    }
+
+    public function setDelete(bool $is_delete): static
+    {
+        $this->is_delete = $is_delete;
+
+        return $this;
+    }
+
+    public function getSenderService(): ?string
+    {
+        return $this->SenderService;
+    }
+
+    public function setSenderService(string $SenderService): static
+    {
+        $this->SenderService = $SenderService;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reply>
+     */
+    public function getReplymessage(): Collection
+    {
+        return $this->replymessage;
+    }
+
+    public function addReplymessage(Reply $replymessage): static
+    {
+        if (!$this->replymessage->contains($replymessage)) {
+            $this->replymessage->add($replymessage);
+            $replymessage->setMessage($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReplymessage(Reply $replymessage): static
+    {
+        if ($this->replymessage->removeElement($replymessage)) {
+            // set the owning side to null (unless already changed)
+            if ($replymessage->getMessage() === $this) {
+                $replymessage->setMessage(null);
+            }
+        }
 
         return $this;
     }

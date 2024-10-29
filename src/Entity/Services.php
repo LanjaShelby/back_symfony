@@ -36,15 +36,15 @@ class Services
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read'])]
+    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read','Message:collection:get'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read'])]
+    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read','User:item:read','Message:collection:get'])]
     private ?string $libelle_service = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read'])]
+    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read','Message:collection:get'])]
     private ?string $secteur = null;
 
     /**

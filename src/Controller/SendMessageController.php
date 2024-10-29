@@ -7,6 +7,7 @@ use App\Entity\Messages;
 use App\Entity\Users;
 use App\Repository\ServicesRepository;
 use App\Repository\UsersRepository;
+use App\Repository\FileRepository;
 use Doctrine\Migrations\Tools\Console\ConsoleLogger;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,9 +19,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Mercure\PublisherInterface;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 
 
-   
    /*
        #[ORM\ManyToOne(inversedBy: 'received')]
     #[ORM\JoinColumn(nullable: false)]
@@ -80,11 +84,13 @@ class SendMessageController  extends AbstractController
 {
    
 
-    public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user , ServicesRepository $service)
+    public function __invoke(Request $request , HubInterface $hub, EntityManagerInterface $entityManager , SluggerInterface $slugger , UsersRepository $user , ServicesRepository $service , FileRepository $fileRepository, PublisherInterface $publisher)
     {
 $MessagePost = $request->request->all();
 /**@var  UploadedFile $file */
 $FilesPost = $request->files->get('files');
+ 
+
 
 if(!$MessagePost){
     return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
@@ -92,6 +98,8 @@ if(!$MessagePost){
 
 $sender = $user->find($MessagePost['sender']);
 $senderName = $sender->getName();
+$senderService = $sender->getService()->getLibelleService();
+
 
 $service_recipient_name = $service->find($MessagePost['recipient']); 
 // the service recipient
@@ -105,10 +113,13 @@ $Message->setSender($sender);
 $Message->setRecipientService($service_recipient_name);
 $Message->setSenderName($senderName);
 $Message->setRecipientName($serviceName);
+$Message->setSenderService($senderService);
 if(!empty($FilesPost)){
     foreach($FilesPost as $file){
        if($file instanceof UploadedFile){
-             $fileName = $file->getClientOriginalName() . '-' . uniqid("", true) . '.' . $file->guessExtension();
+           $originalName = pathinfo($file->getClientOriginalName(),PATHINFO_FILENAME);
+           $safeFileName = $slugger->slug($originalName);
+             $fileName = $safeFileName . '_' . uniqid("", true) . '.' . $file->guessExtension();
                 $filePath = '';
             if (in_array($file->guessExtension(), ["png", "jpg", "jpeg"], true)) {
                 $filePath = '/public/files/Images';
@@ -145,14 +156,32 @@ if(!empty($FilesPost)){
 
 
 }else{
+   $fileshares = $MessagePost['fileshare'];
+   if($fileshares){
+        foreach($fileshares as $file) {
+        $filefile = $fileRepository->findOneBy(['path' => $file ]);
+        $Message->addFile($filefile);
+    }
+ 
+   }else{
     return $this->json([
-        'error' => 'Probleme parcours des fichiers'
+        'error' => 'Fichier non valide ou introuvable.'
     ], 400);
+   }
+        
+    
 }
 
-    $entityManager->persist($Message);  
-    $entityManager->flush();    
+$entityManager->persist($Message);  
+$entityManager->flush(); 
  
+   /* $update = new Update(
+        ["https://localhost:8000/api/messages/{$Message->getId()}"],
+        json_encode(['status' => 'message recu'])
+    );
+
+    $hub->publish($update);
+*/
    
     return $this->json([
         'message' => 'Message envoyer avec succès',

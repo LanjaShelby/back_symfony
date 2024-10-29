@@ -97,12 +97,12 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
   
 
     #[ORM\Column(length: 255)]
-    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get'])]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get','reply:collection:get'])]
     private ?string $name = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
     #[ORM\JoinColumn(nullable: true)]
-    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get','reply:collection:get'])]
     private ?Services $service = null;
 
     #[ORM\Column(length: 100, nullable: true)]
@@ -117,10 +117,17 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
     private ?string $image = null;
 
+    /**
+     * @var Collection<int, Reply>
+     */
+    #[ORM\OneToMany(targetEntity: Reply::class, mappedBy: 'sender')]
+    private Collection $replies;
+
   
     public function __construct()
     {
         $this->sent = new ArrayCollection();
+        $this->replies = new ArrayCollection();
       
     }
 
@@ -290,6 +297,36 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     public function setImage(?string $image): static
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reply>
+     */
+    public function getReplies(): Collection
+    {
+        return $this->replies;
+    }
+
+    public function addReply(Reply $reply): static
+    {
+        if (!$this->replies->contains($reply)) {
+            $this->replies->add($reply);
+            $reply->setSender($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReply(Reply $reply): static
+    {
+        if ($this->replies->removeElement($reply)) {
+            // set the owning side to null (unless already changed)
+            if ($reply->getSender() === $this) {
+                $reply->setSender(null);
+            }
+        }
 
         return $this;
     }
