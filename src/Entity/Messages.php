@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use App\Controller\GetMessageUserController;
+use App\Controller\GetMessageSendController;
 use App\Controller\GetMessageController;
 use App\Controller\SendMessageController;
 use App\Repository\MessagesRepository;
@@ -44,6 +45,13 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             name:'ItemGetMessage',
             uriTemplate: '/itemgetmessage', 
             controller: GetMessageController::class,
+            deserialize: false,
+            stateless: true
+         ),
+         new Post(
+            name:'ItemGetMessageSend',
+            uriTemplate: '/itemsendmessage', 
+            controller: GetMessageSendController::class,
             deserialize: false,
             stateless: true
          ),
