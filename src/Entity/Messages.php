@@ -12,6 +12,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use App\Controller\GetMessageUserController;
 use App\Controller\GetMessageSendController;
+use App\Controller\GetMessageUserSendController;
 use App\Controller\GetMessageController;
 use App\Controller\SendMessageController;
 use App\Repository\MessagesRepository;
@@ -56,6 +57,13 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             stateless: true
          ),
          new Post(
+            name:'UserGetMessageSend',
+            uriTemplate: '/usersendmessage', 
+            controller: GetMessageUserSendController::class,
+            deserialize: false,
+            stateless: true
+         ),
+         new Post(
             name:'UserGetMessage',
             uriTemplate: '/usergetmessage', 
             controller: GetMessageUserController::class,
@@ -75,11 +83,11 @@ class Messages
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-   
+    #[Groups(['Message:collection:get' ,'Message:item:get','notif:collection:get' ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 155)]
-    #[Groups(['Message:collection:get' ,'Message:item:get'])]
+    #[Groups(['Message:collection:get' ,'Message:item:get','notif:collection:get' ])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
@@ -104,7 +112,7 @@ class Messages
     /**
      * @var Collection<int, File>
      */
-    #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'message' , orphanRemoval: false )]
+    #[ORM\OneToMany(targetEntity: File::class, mappedBy: 'message' , cascade: ['remove'], orphanRemoval: true)]
     #[Groups(['Message:collection:get' ,'Message:item:get'])]
     private Collection $files;
 
@@ -131,8 +139,17 @@ class Messages
     /**
      * @var Collection<int, Reply>
      */
-    #[ORM\OneToMany(targetEntity: Reply::class, mappedBy: 'message')]
+    #[ORM\OneToMany(targetEntity: Reply::class, mappedBy: 'message',orphanRemoval: true)]
     private Collection $replymessage;
+
+    /**
+     * @var Collection<int, Notification>
+     */
+    #[ORM\OneToMany(targetEntity: Notification::class, mappedBy: 'message_id')]
+    private Collection $notification;
+
+    #[ORM\Column(length: 150, nullable: true)]
+    private ?string $deletedBy = null;
 
     #[ORM\PrePersist]
    public function setCreatedAtValue(): void{
@@ -241,6 +258,7 @@ class Messages
     {
         $this->files = new ArrayCollection();
         $this->replymessage = new ArrayCollection();
+        $this->notification = new ArrayCollection();
     }
 
     public function getSenderName(): ?string
@@ -329,6 +347,48 @@ class Messages
                 $replymessage->setMessage(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Notification>
+     */
+    public function getNotification(): Collection
+    {
+        return $this->notification;
+    }
+
+    public function addNotification(Notification $notification): static
+    {
+        if (!$this->notification->contains($notification)) {
+            $this->notification->add($notification);
+            $notification->setMessageId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNotification(Notification $notification): static
+    {
+        if ($this->notification->removeElement($notification)) {
+            // set the owning side to null (unless already changed)
+            if ($notification->getMessageId() === $this) {
+                $notification->setMessageId(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getDeletedBy(): ?string
+    {
+        return $this->deletedBy;
+    }
+
+    public function setDeletedBy(?string $deletedBy): static
+    {
+        $this->deletedBy = $deletedBy;
 
         return $this;
     }

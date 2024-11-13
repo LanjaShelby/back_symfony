@@ -14,10 +14,18 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
+use Symfony\Component\Mercure\PublisherInterface;
 
 class RegisterController extends AbstractController
 {
-    public function __invoke(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager , SluggerInterface $slugger , ServicesRepository $service)
+
+    public function __construct(PublisherInterface $publisher)
+    {
+        $this->publisher = $publisher;
+    }
+    public function __invoke(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager , SluggerInterface $slugger , ServicesRepository $service )
     {
         $user = new Users();
         
@@ -73,6 +81,24 @@ class RegisterController extends AbstractController
         }
         $entityManager->persist($user);
         $entityManager->flush();
+
+    //        $update = new Update(
+    //     ["http://127.0.0.1:8000/api/userss/{$user->getId()}"],
+    //     json_encode(['status' => 'message recu'])
+    // );
+
+
+    // $hub->publish($update);
+
+
+    $update = new Update(
+        'http://127.0.0.1:8000/api/userss/' . $user->getId(),
+        json_encode(['user' => $user], JSON_THROW_ON_ERROR)
+    );
+
+    $this->publisher->__invoke($update);
+
+
         return new JsonResponse(['success' => 'Registration reusii'], 200);
     }
 }

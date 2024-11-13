@@ -40,7 +40,7 @@ class Services
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read','User:item:read','Message:collection:get'])]
+    #[Groups(['service:collection:read','service:item:read','service:item:write','User:collection:read','User:item:read','Message:collection:get','notif:collection:get'])]
     private ?string $libelle_service = null;
 
     #[ORM\Column(length: 255)]
@@ -59,10 +59,17 @@ class Services
     #[ORM\OneToMany(targetEntity: Messages::class, mappedBy: 'recipient_service')]
     private Collection $messages;
 
+    /**
+     * @var Collection<int, Notification>
+     */
+    #[ORM\OneToMany(targetEntity: Notification::class, mappedBy: 'service')]
+    private Collection $service_notif;
+
     public function __construct()
     {
         $this->users = new ArrayCollection();
         $this->messages = new ArrayCollection();
+        $this->service_notif = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -148,6 +155,36 @@ class Services
             // set the owning side to null (unless already changed)
             if ($message->getRecipientService() === $this) {
                 $message->setRecipientService(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Notification>
+     */
+    public function getServiceNotif(): Collection
+    {
+        return $this->service_notif;
+    }
+
+    public function addServiceNotif(Notification $serviceNotif): static
+    {
+        if (!$this->service_notif->contains($serviceNotif)) {
+            $this->service_notif->add($serviceNotif);
+            $serviceNotif->setService($this);
+        }
+
+        return $this;
+    }
+
+    public function removeServiceNotif(Notification $serviceNotif): static
+    {
+        if ($this->service_notif->removeElement($serviceNotif)) {
+            // set the owning side to null (unless already changed)
+            if ($serviceNotif->getService() === $this) {
+                $serviceNotif->setService(null);
             }
         }
 

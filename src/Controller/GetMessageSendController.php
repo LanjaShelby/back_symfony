@@ -50,7 +50,7 @@ class GetMessageSendController extends AbstractController
                 'id' => $message->getId(),
                 'title' => $message->getTitle(),
                 'message' => $message->getMessage(),
-                'created_at' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
+                'created_at' => $message->getCreatedAt()->format('c'),
                 'sender' => [
                     'id' => $message ->getSender()->getId(),
                     'name' => $message->getSender()->getName(),

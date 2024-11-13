@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+
+
+
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
 use ApiPlatform\Metadata\Operation;
@@ -26,7 +29,8 @@ use App\Controller\RegisterController;
 use App\Controller\UserInfoController;
 
 #[ApiResource(
-   
+    
+    mercure:true,
     operations:[
         new Get( normalizationContext: ['groups' => ['User:item:read']]),
         new GetCollection(
@@ -97,7 +101,7 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
   
 
     #[ORM\Column(length: 255)]
-    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get','reply:collection:get'])]
+    #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write','Message:collection:get','reply:collection:get','notif:collection:get'])]
     private ?string $name = null;
 
     #[ORM\ManyToOne(inversedBy: 'users')]
@@ -123,11 +127,18 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reply::class, mappedBy: 'sender')]
     private Collection $replies;
 
+    /**
+     * @var Collection<int, Notification>
+     */
+    #[ORM\OneToMany(targetEntity: Notification::class, mappedBy: 'requester_id')]
+    private Collection $user_notif;
+
   
     public function __construct()
     {
         $this->sent = new ArrayCollection();
         $this->replies = new ArrayCollection();
+        $this->user_notif = new ArrayCollection();
       
     }
 
@@ -325,6 +336,36 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($reply->getSender() === $this) {
                 $reply->setSender(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Notification>
+     */
+    public function getUserNotif(): Collection
+    {
+        return $this->user_notif;
+    }
+
+    public function addUserNotif(Notification $userNotif): static
+    {
+        if (!$this->user_notif->contains($userNotif)) {
+            $this->user_notif->add($userNotif);
+            $userNotif->setRequesterId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserNotif(Notification $userNotif): static
+    {
+        if ($this->user_notif->removeElement($userNotif)) {
+            // set the owning side to null (unless already changed)
+            if ($userNotif->getRequesterId() === $this) {
+                $userNotif->setRequesterId(null);
             }
         }
 

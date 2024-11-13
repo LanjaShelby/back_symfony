@@ -34,7 +34,7 @@ class GetReplyController extends AbstractController
             'id' => $reply->getId(),
             'statut' => $reply->getStatut(),
             'message' => $reply->getMessageReply(),
-            'created_at' => $message->getCreatedAt()->format('Y-m-d H:i:s'),
+            'created_at' => $message->getCreatedAt()->format('c'),
             'sender' => [
                 'name' => $reply->getSender()->getName(),
                 'roles' => $reply->getSender()->getRoles(),

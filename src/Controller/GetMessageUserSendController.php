@@ -14,15 +14,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-class GetMessageUserController extends AbstractController
+class GetMessageUserSendController extends AbstractController
 {
-
     public function __invoke(Request $request , EntityManagerInterface $entityManager , UsersRepository $user , ServicesRepository $service )
     {
         $MessagePost = $request->request->all();
        
         $servicePost = $MessagePost['service'];
-    
         //$userPost = $MessagePost['user'];
     
         if(!$MessagePost || !$servicePost){
@@ -37,11 +35,14 @@ class GetMessageUserController extends AbstractController
 
        // dd($recipientService);
         $repository = $entityManager->getRepository(Messages::class);
-        $messages = $repository->findBy(
-            ['recipient_service' => $recipientService , 'is_delete' => false ],
-            ['created_at' => 'DESC'],
-           
-        );
+        $messages = $repository->createQueryBuilder('m')
+        ->join('m.sender', 's')
+        ->where('s.service = :service')
+        ->andWhere('m.is_delete = false')
+        ->setParameter('service', $recipientService)
+        ->orderBy('m.created_at', 'DESC')
+        ->getQuery()
+        ->getResult();
         
       
         $data = [];
@@ -52,8 +53,10 @@ class GetMessageUserController extends AbstractController
                 'message' => $message->getMessage(),
                 'created_at' => $message->getCreatedAt()->format('c'),
                 'sender' => [
+                    'id' => $message ->getSender()->getId(),
                     'name' => $message->getSender()->getName(),
                     'roles' => $message->getSender()->getRoles(),
+                    
                 ],
                 'senderName' => $message->getSenderName(),
                 'recipientName' => $message->getRecipientName(),
@@ -61,6 +64,7 @@ class GetMessageUserController extends AbstractController
                     'libelle_name' => $message->getRecipientService()->getLibelleService(),
                     'secteur' => $message->getRecipientService()->getSecteur(),
                 ],
+                'senderService' => $message->getSenderService(),
                 'is_read' => $message->isRead(),
                 'files' => array_map(function ($file) {
                     return [
@@ -74,4 +78,5 @@ class GetMessageUserController extends AbstractController
         // Retourner les messages sous forme de JSON
         return new JsonResponse($data);
     }
+
 }
