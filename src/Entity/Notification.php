@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use App\Controller\GetNotificationController;
+use App\Controller\GetNotificationReceiveController;
 use App\Repository\NotificationRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -24,6 +25,13 @@ use Symfony\Component\Serializer\Annotation\Groups;
             name:'GetNotification',
             uriTemplate: '/getnotification', 
             controller: GetNotificationController::class,
+            deserialize: false,
+            stateless: true
+         ),
+         new Post(
+            name:'GetNotificationReceiveController',
+            uriTemplate: '/notification', 
+            controller: GetNotificationReceiveController::class,
             deserialize: false,
             stateless: true
          ),
@@ -65,6 +73,7 @@ class Notification
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(['notif:collection:get' ,'notif:item:get'])]
     private ?string $service_sender = null;
 
   

@@ -115,7 +115,7 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
-    private ?string $phone = null;
+    private ?int $phone = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['User:collection:read', 'User:item:read' ,'User:item:write'])]
