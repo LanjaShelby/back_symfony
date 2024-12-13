@@ -10,11 +10,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Repository\ServicesRepository;
 use Symfony\Component\HttpFoundation\Request;
-
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 
 class GetAllUserController extends AbstractController
 {
-    public function __invoke( Request $request , UsersRepository $user , ServicesRepository $service )
+    public function __invoke( Request $request , UsersRepository $user , ServicesRepository $service , HubInterface $hub)
     {
         $Post = $request->request->all();
         $find_service = $service->find($Post['service']);
@@ -35,6 +36,15 @@ class GetAllUserController extends AbstractController
                 'phone' => $user_ser->getPhone(),
                 'image' => $user_ser->getImage()
             ];
+            /*
+            $update = new Update(
+                'http://localhost/api/pizzas/{id}',
+                json_encode(['status' => 'OutOfStock'])
+            );
+    
+            $hub->publish($update);
+    */
+          
 
         }
         return new JsonResponse($data);

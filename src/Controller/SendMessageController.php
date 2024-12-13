@@ -11,6 +11,7 @@ use App\Repository\FileRepository;
 use Doctrine\Migrations\Tools\Console\ConsoleLogger;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Predis\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -82,7 +83,15 @@ $data = base64_decode($file);
 */
 class SendMessageController  extends AbstractController
 {
-   
+    private Client $Redis;
+
+    public function __construct()
+    {
+        $this->Redis = new Client([
+            'scheme' => 'tcp',
+            'host'   => '127.0.0.1',
+            'port'   => 6379,
+        ]);}
 
     public function __invoke(Request $request , HubInterface $hub, EntityManagerInterface $entityManager , SluggerInterface $slugger , UsersRepository $user , ServicesRepository $service , FileRepository $fileRepository, PublisherInterface $publisher)
     {
@@ -174,14 +183,57 @@ if(!empty($FilesPost)){
 
 $entityManager->persist($Message);  
 $entityManager->flush(); 
- 
-   /* $update = new Update(
-        ["https://localhost:8000/api/messages/{$Message->getId()}"],
-        json_encode(['status' => 'message recu'])
-    );
 
-    $hub->publish($update);
-*/
+$data[] = [
+    'id' => $Message->getId(),
+    'title' => $Message->getTitle(),
+    'message' => $Message->getMessage(),
+    'created_at' => $Message->getCreatedAt()->format('c'),
+    'sender' => [
+        'id' => $Message ->getSender()->getId(),
+        'name' => $Message->getSender()->getName(),
+        'roles' => $Message->getSender()->getRoles(),
+        
+    ],
+    'senderName' => $Message->getSenderName(),
+    'recipientName' => $Message->getRecipientName(),
+    'recipient_service' => [
+        'libelle_name' => $Message->getRecipientService()->getLibelleService(),
+        'secteur' => $Message->getRecipientService()->getSecteur(),
+    ],
+    'senderService' => $Message->getSenderService(),
+    'is_read' => $Message->isRead(),
+    'files' => array_map(function ($file) {
+        return [
+            'path' => $file->getPath(),
+            'type' => $file->getTypeFile(),
+        ];
+    }, $Message->getFiles()->toArray()), // Convertir la collection de fichiers
+];
+
+try {
+    // Publier un message dans Redis (simulé ici comme stockage d'une clé)
+    $channel = 'test_channel';
+    $message = [
+        'user' => 'TestUser',
+        'content' => 'This is a second test message',
+       
+    ];
+
+    // Écriture d'une clé pour simuler une publication
+    $this->Redis->publish($channel, json_encode($data));
+
+    return new JsonResponse([
+        'status' => 'Message published',
+        'message' => $data,
+    ]);
+} catch (\Exception $e) {
+    return new JsonResponse([
+        'status' => 'error',
+        'message' => $e->getMessage(),
+    ], 500);
+}
+ 
    
     return $this->json([
         'message' => 'Message envoyer avec succès',
@@ -190,6 +242,23 @@ $entityManager->flush();
     }
 
 }
+
+/* $update = new Update(
+        ["https://localhost:8000/api/messages/{$Message->getId()}"],
+        json_encode(['status' => 'message recu'])
+    );
+
+    $hub->publish($update);
+
+    $MessageMessage = $MessagePost['message'];
+$title = $MessagePost['title'];
+$senderredis=$sender;
+$service_recipient_nameredis = $service_recipient_name;
+$senderredisname = $senderName;
+$setRecipientNameredis = $serviceName;
+$SenderServiceredis =$senderService;
+
+   */
     
     /*private $entityManager;
       #[Route(path: '/api/publish', name: 'publish')]

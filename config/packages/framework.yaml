@@ -2,7 +2,7 @@
 framework:
     secret: '%env(APP_SECRET)%'
     #csrf_protection: true
-
+    
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
@@ -11,6 +11,7 @@ framework:
 
 when@test:
     framework:
+        trusted_hosts: ['^127\.0\.0\.1$', '^10\.0\.2\.15$']
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file

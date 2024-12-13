@@ -11,21 +11,24 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\Mercure\PublisherInterface;
+use Symfony\Component\Mime\Email;
 
 class RegisterController extends AbstractController
 {
 
-    public function __construct(PublisherInterface $publisher)
+    /*public function __construct(PublisherInterface $publisher)
     {
         $this->publisher = $publisher;
-    }
-    public function __invoke(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager , SluggerInterface $slugger , ServicesRepository $service )
+    }*/
+    public function __invoke(Request $request, MailerInterface $mailer ,UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager , SluggerInterface $slugger , ServicesRepository $service )
     {
         $user = new Users();
         
@@ -45,6 +48,11 @@ class RegisterController extends AbstractController
         }
        // $services = $service->find($UserPost['service']);
 
+       $username = $UserPost['name'];
+       $email = $UserPost['email'];
+       $password = $UserPost['password'];
+      $emailAddress = $UserPost['email'];
+      
          $user->setName($UserPost['name']);
          $user->setEmail($UserPost['email']);
          $user->setFonction($UserPost['fonction']);
@@ -79,8 +87,30 @@ class RegisterController extends AbstractController
                 )
                 );
         }
+        $email = (new Email())
+        ->from('bonasenesa@gmail.com')
+        ->to($emailAddress)
+        ->subject('Inscriptions Share')
+        ->html("
+            <p >Bonjour <strong>$username</strong>,</p>
+            <p> Votre à bien été créer avec succès par l'administrateur de votre service</p>
+            <p>Voici vos identifiants :</p>
+            <ul>
+                <li><strong>Nom d'utilisateur :</strong> $username</li>
+                <li><strong>Mot de passe :</strong> $password</li>
+            </ul>
+            <p>Merci de vous connecter sur notre <a href='http://127.0.0.1:3000/login'>application</a>.</p>
+        ");
+
+
+    $mailer->send($email);
+      
         $entityManager->persist($user);
         $entityManager->flush();
+
+
+
+      
 
     //        $update = new Update(
     //     ["http://127.0.0.1:8000/api/userss/{$user->getId()}"],
@@ -90,13 +120,27 @@ class RegisterController extends AbstractController
 
     // $hub->publish($update);
 
-
+/*
     $update = new Update(
         'http://127.0.0.1:8000/api/userss/' . $user->getId(),
         json_encode(['user' => $user], JSON_THROW_ON_ERROR)
     );
 
     $this->publisher->__invoke($update);
+     // try {
+           
+    
+            //return $this->json(['status' => 'Email sent successfully']);
+            //return new JsonResponse(['success' => 'Registration reusii'], 200);
+        } catch (TransportExceptionInterface $e) {
+            // Gestion de l'erreur de transport (SMTP, adresse invalide, etc.)
+            return $this->json([
+                'status' => 'Error',
+                'message' => 'Failed to send email: ' . $e->getMessage(),
+            ], 500);
+        }
+    
+    */
 
 
         return new JsonResponse(['success' => 'Registration reusii'], 200);

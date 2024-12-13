@@ -43,7 +43,7 @@ class GetNotificationReceiveController extends AbstractController
         $data = [];
         foreach ($notifications as $notification) {
             $data[] = [
-                'id' => $notification->getId(),
+                'id' => $notification->getId() ? $notification->getId() : null,
                 'action_type' => $notification->getActionType(),
                 'created_at' => $notification->getCreatedAt()->format('c'),
                 'requester' => [
