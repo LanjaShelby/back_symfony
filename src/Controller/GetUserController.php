@@ -22,7 +22,7 @@ class GetUserController extends AbstractController
                 'email' => $user_ser->getUserIdentifier(),
                 'roles' => $user_ser->getRoles(),
                 'name' => $user_ser->getName(),
-                'service' => $user_ser->getService(),
+                'service' => $user_ser->getService()->getLibelleService(),
                 'fonction' => $user_ser->getFonction(),
                 'phone' => $user_ser->getPhone(),
                 'image' => $user_ser->getImage()

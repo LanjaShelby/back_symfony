@@ -30,7 +30,7 @@ use App\Controller\UserInfoController;
 
 #[ApiResource(
     
-    mercure:true,
+   
     operations:[
         new Get( normalizationContext: ['groups' => ['User:item:read']]),
         new GetCollection(

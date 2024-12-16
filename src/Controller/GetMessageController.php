@@ -22,16 +22,13 @@ class GetMessageController extends AbstractController
         $MessagePost = $request->request->all();
        
         $servicePost = $MessagePost['service'];
-        //$userPost = $MessagePost['user'];
+        
     
         if(!$MessagePost || !$servicePost){
             return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
         }
 
-        //if(!$MessagePost || !$userPost){
-          //  return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
-       // }
-       // $recipient = $user->findOneBy(['name' =>$userPost]);
+       
         $recipientService = $service->find($servicePost);
 
        // dd($recipientService);

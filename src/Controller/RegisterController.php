@@ -87,6 +87,12 @@ class RegisterController extends AbstractController
                 )
                 );
         }
+       
+      
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+
         $email = (new Email())
         ->from('bonasenesa@gmail.com')
         ->to($emailAddress)
@@ -97,6 +103,7 @@ class RegisterController extends AbstractController
             <p>Voici vos identifiants :</p>
             <ul>
                 <li><strong>Nom d'utilisateur :</strong> $username</li>
+                <li><strong>Adresse E-mail :</strong> $email</li>
                 <li><strong>Mot de passe :</strong> $password</li>
             </ul>
             <p>Merci de vous connecter sur notre <a href='http://127.0.0.1:3000/login'>application</a>.</p>
@@ -104,12 +111,6 @@ class RegisterController extends AbstractController
 
 
     $mailer->send($email);
-      
-        $entityManager->persist($user);
-        $entityManager->flush();
-
-
-
       
 
     //        $update = new Update(

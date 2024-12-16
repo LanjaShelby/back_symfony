@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
+use App\Controller\GetCountController;
 use App\Controller\GetMessageUserController;
 use App\Controller\GetMessageSendController;
 use App\Controller\GetMessageUserSendController;
@@ -46,6 +47,13 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             name:'ItemGetMessage',
             uriTemplate: '/itemgetmessage', 
             controller: GetMessageController::class,
+            deserialize: false,
+            stateless: true
+         ),
+         new Post(
+            name:'countMessage',
+            uriTemplate: '/countmessage', 
+            controller: GetCountController::class,
             deserialize: false,
             stateless: true
          ),
