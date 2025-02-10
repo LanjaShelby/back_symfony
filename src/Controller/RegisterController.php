@@ -113,35 +113,9 @@ class RegisterController extends AbstractController
     $mailer->send($email);
       
 
-    //        $update = new Update(
-    //     ["http://127.0.0.1:8000/api/userss/{$user->getId()}"],
-    //     json_encode(['status' => 'message recu'])
-    // );
 
 
-    // $hub->publish($update);
 
-/*
-    $update = new Update(
-        'http://127.0.0.1:8000/api/userss/' . $user->getId(),
-        json_encode(['user' => $user], JSON_THROW_ON_ERROR)
-    );
-
-    $this->publisher->__invoke($update);
-     // try {
-           
-    
-            //return $this->json(['status' => 'Email sent successfully']);
-            //return new JsonResponse(['success' => 'Registration reusii'], 200);
-        } catch (TransportExceptionInterface $e) {
-            // Gestion de l'erreur de transport (SMTP, adresse invalide, etc.)
-            return $this->json([
-                'status' => 'Error',
-                'message' => 'Failed to send email: ' . $e->getMessage(),
-            ], 500);
-        }
-    
-    */
 
 
         return new JsonResponse(['success' => 'Registration reusii'], 200);

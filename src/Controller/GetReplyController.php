@@ -38,6 +38,7 @@ class GetReplyController extends AbstractController
             'sender' => [
                 'name' => $reply->getSender()->getName(),
                 'roles' => $reply->getSender()->getRoles(),
+                'image' => $reply->getSender()->getImage(),
                 
             ],
             'recipient' => [

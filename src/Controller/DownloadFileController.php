@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class DownloadFileController extends AbstractController
 {
-    #[Route('/download/{TypeFile}/{filename}', name: 'app_download_file')]
+    #[Route('/api/download/{TypeFile}/{filename}', name: 'app_download_file')]
     public function downloadfile($TypeFile,$filename): Response
     {
         $filePath = $this->getParameter('kernel.project_dir') . '/public/files/'.$TypeFile. "/" . $filename;

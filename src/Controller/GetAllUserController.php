@@ -36,14 +36,7 @@ class GetAllUserController extends AbstractController
                 'phone' => $user_ser->getPhone(),
                 'image' => $user_ser->getImage()
             ];
-            /*
-            $update = new Update(
-                'http://localhost/api/pizzas/{id}',
-                json_encode(['status' => 'OutOfStock'])
-            );
-    
-            $hub->publish($update);
-    */
+         
           
 
         }

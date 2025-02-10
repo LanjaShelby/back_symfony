@@ -50,31 +50,7 @@ $currentUser = $usersRepository->find($user);
         return $this->json([
             'success' 
         ], 200);
-       /* if ($request->isMethod('POST')) {
-            $currentPassword = $request->request->get('current_password');
-            $newPassword = $request->request->get('new_password');
-            $confirmPassword = $request->request->get('confirm_password');
-
-            // Vérifier le mot de passe actuel
-            if (!$passwordHasher->isPasswordValid($user, $currentPassword)) {
-                $this->addFlash('error', 'Le mot de passe actuel est incorrect.');
-                return $this->redirectToRoute('app_change_password');
-            }
-
-            // Vérifier que les nouveaux mots de passe correspondent
-            if ($newPassword !== $confirmPassword) {
-                $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
-                return $this->redirectToRoute('app_change_password');
-            }
-
-            // Mettre à jour le mot de passe
-            $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Votre mot de passe a été changé avec succès.');
-
-            return $this->redirectToRoute('app_home'); // Redirigez vers une page appropriée
-        }*/
+     
 
         
     }

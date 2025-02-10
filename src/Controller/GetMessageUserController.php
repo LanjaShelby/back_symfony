@@ -29,10 +29,7 @@ class GetMessageUserController extends AbstractController
             return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
         }
 
-        //if(!$MessagePost || !$userPost){
-          //  return new JsonResponse(['error' => 'Aucun donnée reçu'], 400);
-       // }
-       // $recipient = $user->findOneBy(['name' =>$userPost]);
+        
         $recipientService = $service->find($servicePost);
 
        // dd($recipientService);
@@ -54,6 +51,7 @@ class GetMessageUserController extends AbstractController
                 'sender' => [
                     'name' => $message->getSender()->getName(),
                     'roles' => $message->getSender()->getRoles(),
+                    'image' => $message->getSender()->getImage(),
                 ],
                 'senderName' => $message->getSenderName(),
                 'recipientName' => $message->getRecipientName(),

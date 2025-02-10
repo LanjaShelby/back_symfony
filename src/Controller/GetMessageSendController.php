@@ -55,6 +55,7 @@ class GetMessageSendController extends AbstractController
                     'id' => $message ->getSender()->getId(),
                     'name' => $message->getSender()->getName(),
                     'roles' => $message->getSender()->getRoles(),
+                    'image' => $message->getSender()->getImage(),
                     
                 ],
                 'senderName' => $message->getSenderName(),

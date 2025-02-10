@@ -15,32 +15,7 @@ use Symfony\Component\Validator\Validation;
 
 class SendMailController extends AbstractController
 {
-   /* #[Route('/send/mail', name: 'app_send_mail')]
-    public function index(): Response
-    {
-        return $this->render('send_mail/index.html.twig', [
-            'controller_name' => 'SendMailController',
-        ]);
-
- MERCURE_PUBLISHER_JWT_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdfX0.vpV9_d4uQeqNczcI2ebcHilEGHu5OxY5rozFIBVEdxw' / 
- MERCURE_SUBSCRIBER_JWT_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdfX0.vpV9_d4uQeqNczcI2ebcHilEGHu5OxY5rozFIBVEdxw'/
-./mercure run --config dev.Caddyfile
-./mercure run --config /etc/mercure/Caddyfile
-./mercure run --config /etc/mercure/ .env
-export MERCURE_PUBLISHER_JWT_KEY='!ChangeThisMercureHubJWTSecretKey!'/
-export MERCURE_SUBSCRIBER_JWT_KEY='!ChangeThisMercureHubJWTSecretKey!'
-
-
-MERCURE_PUBLISHER_JWT_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdfX0.szEBOkhwg1OyIQnz8heYkAbUNzhubuXk3ILgUvmCoAg' \
-MERCURE_SUBSCRIBER_JWT_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjdXJlIjp7InB1Ymxpc2giOlsiKiJdfX0.szEBOkhwg1OyIQnz8heYkAbUNzhubuXk3ILgUvmCoAg' \
-./mercure run --config dev.Caddyfile --listen :4000
-
-MERCURE_PUBLISHER_JWT_KEY='!ChangeThisMercureHubJWTSecretKey!' \
-MERCURE_SUBSCRIBER_JWT_KEY='!ChangeThisMercureHubJWTSecretKey!' \
-
-
-
-    } */
+  
     #[Route('/send/mail', name: 'app_send_mail')]
     public function testMail(MailerInterface $mailer): JsonResponse
     {
